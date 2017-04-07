@@ -9,7 +9,8 @@ use Nette\DI\Container;
 use Nette\Http\IRequest;
 use Nette\Http\IResponse;
 use Symfony\Component\BrowserKit;
-
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symplify\SymbioticController\Application\InvokablePresenterAwareApplication;
 
 
 class Client extends BrowserKit\Client
@@ -76,7 +77,9 @@ class Client extends BrowserKit\Client
 		$presenterFactory = $this->container->getByType(IPresenterFactory::class);
 		/** @var IRouter $router */
 		$router = $this->container->getByType(IRouter::class);
-		$application = $this->createApplication($request, $presenterFactory, $router, $response);
+		/** @var EventDispatcherInterface $eventDispatcher */
+		$eventDispatcher = $this->container->getByType(EventDispatcherInterface::class);
+		$application = $this->createApplication($request, $presenterFactory, $router, $response, $eventDispatcher);
 		$this->container->removeService('application');
 		$this->container->addService('application', $application);
 
@@ -100,13 +103,14 @@ class Client extends BrowserKit\Client
 		return RequestConverter::convertRequest($request);
 	}
 
-	protected function createApplication(IRequest $request, IPresenterFactory $presenterFactory, IRouter $router, IResponse $response)
+	protected function createApplication(IRequest $request, IPresenterFactory $presenterFactory, IRouter $router, IResponse $response, EventDispatcherInterface $eventDispatcher)
 	{
-		$application = new Application(
+		$application = new InvokablePresenterAwareApplication(
 			$presenterFactory,
 			$router,
 			$request,
-			$response
+			$response,
+			$eventDispatcher
 		);
 
 		return $application;
