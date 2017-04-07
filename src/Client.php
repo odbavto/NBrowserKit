@@ -113,6 +113,8 @@ class Client extends BrowserKit\Client
 			$eventDispatcher
 		);
 
+		$application->errorPresenter = 'Error';
+
 		return $application;
 	}
 
